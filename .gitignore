@@ -1,0 +1,10 @@
+# Keep environment variables out of version control
+.env
+venv/
+.venv/
+
+__pycache__/
+*.py[cod]
+*.pyo
+
+.vscode
