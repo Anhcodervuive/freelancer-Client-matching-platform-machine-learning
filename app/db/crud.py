@@ -60,35 +60,69 @@ async def save_embedding(
     return obj
 
 
-async def update_match_feature(
+async def upsert_match_feature(
     session: AsyncSession,
+    *,
     job_id: str,
     freelancer_id: str,
-    p_match: Optional[float] = None,
-    p_accept: Optional[float] = None,
+    similarity_score: float | None = None,
+    budget_gap: float | None = None,
+    rate_gap: float | None = None,
+    timezone_gap_hours: int | None = None,
+    level_gap: int | None = None,
+    p_match: float | None = None,
+    p_freelancer_accept: float | None = None,
+    p_client_accept: float | None = None,
 ):
-    now = datetime.now(timezone.utc)
-
+    """
+    UPSERT 1 record match_feature cho (job, freelancer).
+    Mặc định không ghi đè field nào nếu param = None.
+    """
     mf_id = f"{job_id}-{freelancer_id}"
     mf = await session.get(MatchFeature, mf_id)
 
-    if mf is None:
+    now = datetime.now(timezone.utc)
+
+    # nếu đã có record
+    if mf:
+        # update các field
+        if rate_gap is not None:
+            mf.rate_gap = rate_gap
+        if timezone_gap_hours is not None:
+            mf.timezone_gap_hours = timezone_gap_hours
+        if level_gap is not None:
+            mf.level_gap = level_gap
+        if p_match is not None:
+            mf.p_match = p_match
+        if p_freelancer_accept is not None:
+            mf.p_freelancer_accept = p_freelancer_accept
+        if p_client_accept is not None:
+            mf.p_client_accept = p_client_accept
+
+        mf.updated_at = now
+
+    else:
+        # create mới
         mf = MatchFeature(
             id=mf_id,
             job_id=job_id,
             freelancer_id=freelancer_id,
-            created_at=now,   # ✅ tự set
-            updated_at=now,   # ✅ tự set
+            similarity_score=similarity_score,
+            budget_gap=budget_gap,
+            rate_gap=rate_gap,
+            timezone_gap_hours=timezone_gap_hours,
+            level_gap=level_gap,
+            p_match=p_match,
+            p_freelancer_accept=p_freelancer_accept,
+            p_client_accept=p_client_accept,
+            last_interaction_at=None,
+
+            # ✅ set tay khi insert
+            created_at=now,
+            updated_at=now,
         )
-    else:
-        mf.updated_at = now   # ✅ luôn update mỗi lần ghi
+        session.add(mf)
 
-    if p_match is not None:
-        mf.p_match = p_match
-    if p_accept is not None:
-        mf.p_freelancer_accept = p_accept
-
-    session.add(mf)
     await session.commit()
     await session.refresh(mf)
     return mf

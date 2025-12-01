@@ -9,11 +9,14 @@ engine = create_async_engine(
     pool_pre_ping=True
 )
 
-async_session = sessionmaker(
+AsyncSessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False
 )
+
+# Nếu trước đây bạn dùng tên async_session thì giữ alias này cho tương thích
+async_session = AsyncSessionLocal
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
