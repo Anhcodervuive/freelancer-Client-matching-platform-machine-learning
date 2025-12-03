@@ -45,12 +45,13 @@ def test_aggregate_skill_embedding_mean_and_renorm(monkeypatch):
     import types
 
     fake_ml_models = types.ModuleType("app.models.ml_models")
-    fake_ml_models.get_embedding_model = lambda _: FakeModel()
+    setattr(fake_ml_models, "get_embedding_model", lambda _: FakeModel())
     monkeypatch.setitem(sys.modules, "app.models.ml_models", fake_ml_models)
 
     emb = aggregate_skill_embedding(["ReactJS", "Node.js"], renormalize_output=True)
 
     # mean -> [0.5, 0.5], sau đó renorm -> [~0.707, ~0.707]
+    assert emb is not None
     assert pytest.approx(emb[0], rel=1e-3) == 0.7071
     assert pytest.approx(emb[1], rel=1e-3) == 0.7071
     assert calls["normalize_embeddings"] is True
@@ -71,7 +72,7 @@ def test_aggregate_skill_embedding_no_renorm(monkeypatch):
     import types
 
     fake_ml_models = types.ModuleType("app.models.ml_models")
-    fake_ml_models.get_embedding_model = lambda _: FakeModel()
+    setattr(fake_ml_models, "get_embedding_model", lambda _: FakeModel())
     monkeypatch.setitem(sys.modules, "app.models.ml_models", fake_ml_models)
 
     emb = aggregate_skill_embedding(
@@ -79,6 +80,7 @@ def test_aggregate_skill_embedding_no_renorm(monkeypatch):
     )
 
     # mean trực tiếp: [(0.6+0)/2, (0.8+1)/2] = [0.3, 0.9]
+    assert emb is not None
     assert emb == pytest.approx([0.3, 0.9], rel=1e-6)
 
 
@@ -93,7 +95,7 @@ def test_aggregate_skill_embedding_empty_after_normalize(monkeypatch):
     import types
 
     fake_ml_models = types.ModuleType("app.models.ml_models")
-    fake_ml_models.get_embedding_model = lambda _: FakeModel()
+    setattr(fake_ml_models, "get_embedding_model", lambda _: FakeModel())
     monkeypatch.setitem(sys.modules, "app.models.ml_models", fake_ml_models)
 
     assert aggregate_skill_embedding([" ", ""], renormalize_output=True) is None
