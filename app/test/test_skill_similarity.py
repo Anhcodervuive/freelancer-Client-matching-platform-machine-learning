@@ -9,6 +9,15 @@ Mục đích:
     - các metric overlap: intersection, jaccard, coverage
 - Log ra console cho bạn dễ nhìn, so sánh.
 
+Lưu ý:
+- Nếu chỉ ghép nguyên danh sách skill thành chuỗi ("react, nodejs, express, css")
+  để embed một lần thì điểm cosine có thể thấp dù overlap cao. Mô hình câu sẽ coi
+  đây là một đoạn văn lạ, mất bối cảnh "danh sách skill" và dễ bị nhiễu bởi thứ
+  tự, dấu câu, alias (REST API vs REST APIs...).
+- Để khử nhiễu, nên normalize alias/viết hoa, sort/dedup, embed từng skill rồi
+  tổng hợp (max/mean), đồng thời bổ sung feature overlap (jaccard, coverage) để
+  score phản ánh đúng mức độ match kỹ năng.
+
 Yêu cầu:
     pip install sentence-transformers
 """
