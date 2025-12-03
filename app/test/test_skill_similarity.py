@@ -179,6 +179,18 @@ TEST_CASES = [
         "job_skills": ["Python", "NLP", "Transformers", "PyTorch"],
         "freelancer_skills": ["Python", "SQL", "Airflow", "Spark"],
     },
+    {
+        "code": "CASE_6",
+        "description": "Backend Java vs Frontend JS (domain lệch, có 1 kỹ năng chung là REST)",
+        "job_skills": ["Java", "Spring", "REST API", "MySQL"],
+        "freelancer_skills": ["React", "TypeScript", "REST", "CSS"],
+    },
+    {
+        "code": "CASE_7",
+        "description": "DevOps/Cloud vs Backend Python (ngang domain infra/BE)",
+        "job_skills": ["AWS", "Docker", "Kubernetes", "Terraform"],
+        "freelancer_skills": ["Python", "Docker", "PostgreSQL", "AWS"],
+    },
 ]
 
 
