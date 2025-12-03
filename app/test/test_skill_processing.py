@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from pytest import approx
 
 # Cho phép import module app khi chạy trực tiếp file test
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -52,8 +53,8 @@ def test_aggregate_skill_embedding_mean_and_renorm(monkeypatch):
 
     # mean -> [0.5, 0.5], sau đó renorm -> [~0.707, ~0.707]
     assert emb is not None
-    assert pytest.approx(emb[0], rel=1e-3) == 0.7071
-    assert pytest.approx(emb[1], rel=1e-3) == 0.7071
+    assert approx(emb[0], rel=1e-3) == 0.7071
+    assert approx(emb[1], rel=1e-3) == 0.7071
     assert calls["normalize_embeddings"] is True
 
 
@@ -81,7 +82,7 @@ def test_aggregate_skill_embedding_no_renorm(monkeypatch):
 
     # mean trực tiếp: [(0.6+0)/2, (0.8+1)/2] = [0.3, 0.9]
     assert emb is not None
-    assert emb == pytest.approx([0.3, 0.9], rel=1e-6)
+    assert emb == approx([0.3, 0.9], rel=1e-6)
 
 
 def test_aggregate_skill_embedding_empty_after_normalize(monkeypatch):
