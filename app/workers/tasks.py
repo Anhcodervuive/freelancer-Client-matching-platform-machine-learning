@@ -35,7 +35,6 @@ async def get_entity_embeddings(
     for row in rows:
         # row.kind = "FULL" | "SKILLS" | "DOMAIN"
         result[row.kind] = row.vector
-        print(row.id)
     return result
 
 
@@ -101,7 +100,7 @@ async def recompute_matches_for_freelancer(freelancer_id: str, top_n: int = 200)
             job_embs = await get_entity_embeddings(session, "JOB", job_id)
             if not job_embs:
                 continue
-
+            print('job_id: ' + job_id)
             score = multi_embedding_similarity(job_embs, fr_embs)
             if score is None:
                 continue

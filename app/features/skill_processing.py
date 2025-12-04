@@ -42,7 +42,7 @@ def normalize_skill_list(skills: Iterable[str]) -> List[str]:
 def aggregate_skill_embedding(
     skills: Iterable[str],
     model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
-    normalize: bool = True,
+    normalize: bool = False,
     renormalize_output: bool = True,
 ) -> Optional[List[float]]:
     """

@@ -23,7 +23,7 @@ def multi_embedding_similarity(
     weights:            {"FULL": 0.6, "SKILLS": 0.3, "DOMAIN": 0.1}
     """
     if weights is None:
-        weights = {"FULL": 0.6, "SKILLS": 0.3, "DOMAIN": 0.1}
+        weights = {"FULL": 0.2, "SKILLS": 0.6, "DOMAIN": 0.2}
 
     sims: list[float] = []
     w_used: list[float] = []
@@ -33,7 +33,9 @@ def multi_embedding_similarity(
         v_fr = fr_embs.get(kind)
         if v_job is None or v_fr is None:
             continue
-        sims.append(cosine_similarity(v_job, v_fr))
+        consinSimilary = cosine_similarity(v_job, v_fr)
+        print(kind, consinSimilary)
+        sims.append(consinSimilary)
         w_used.append(w)
 
     if not sims:
