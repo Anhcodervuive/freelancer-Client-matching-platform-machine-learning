@@ -1,23 +1,13 @@
 import sys
 from pathlib import Path
-from typing import Any, cast
 
-# Bổ sung sys.path trước khi import để tránh lỗi ModuleNotFoundError khi chạy trực tiếp
+# Bảo đảm import được module app khi chạy pytest hoặc python trực tiếp
 ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
-try:  # pragma: no cover - chỉ để hỗ trợ chạy trực tiếp mà không cài pytest
-    import pytest
-    from pytest import approx
-except ModuleNotFoundError:  # Fallback khi chạy "python test_skill_processing.py"
-    import types
-
-    # import sau khi đã thêm ROOT_DIR vào sys.path
-    from app.test.pytest_fallback import approx
-
-    pytest = cast(Any, types.ModuleType("pytest"))
-    pytest.approx = approx
+import pytest
+from pytest import approx
 
 from app.features.skill_processing import (
     aggregate_skill_embedding,
@@ -52,7 +42,6 @@ def test_aggregate_skill_embedding_mean_and_renorm(monkeypatch):
                 [0.0, 1.0],
             ]
 
-    import sys
     import types
 
     fake_ml_models = types.ModuleType("app.models.ml_models")
@@ -79,7 +68,6 @@ def test_aggregate_skill_embedding_no_renorm(monkeypatch):
                 [0.0, 1.0],
             ]
 
-    import sys
     import types
 
     fake_ml_models = types.ModuleType("app.models.ml_models")
@@ -102,7 +90,6 @@ def test_aggregate_skill_embedding_empty_after_normalize(monkeypatch):
         def encode(self, texts, normalize_embeddings=True):  # pragma: no cover - không được gọi
             raise AssertionError("encode should not be called")
 
-    import sys
     import types
 
     fake_ml_models = types.ModuleType("app.models.ml_models")
@@ -124,20 +111,4 @@ def test_normalize_skill_list_stability():
 
 
 if __name__ == "__main__":  # pragma: no cover - hỗ trợ chạy trực tiếp bằng python
-    test_file = Path(__file__).resolve()
-    print(f"Chạy test thủ công cho {test_file} ...")
-
-    try:
-        import pytest
-
-        # Gọi pytest để có log chi tiết trên console (chỉ chạy bộ test này)
-        exit_code = pytest.main([str(test_file)])
-        print("\nHoàn thành test_skill_processing. Nếu cần xem log demo similarity, "
-              "chạy thêm: python app/test/test_skill_similarity.py")
-        raise SystemExit(exit_code)
-    except ModuleNotFoundError:
-        print(
-            "Không tìm thấy pytest. Cài bằng `pip install -r requirements-dev.txt` "
-            "hoặc chạy `pytest app/test/test_skill_processing.py -q`."
-        )
-        print("Các hàm test sẽ không chạy khi thiếu pytest.")
+    raise SystemExit(pytest.main([__file__]))
