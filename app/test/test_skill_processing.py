@@ -1,8 +1,16 @@
 import sys
 from pathlib import Path
 
-import pytest
-from pytest import approx
+try:  # pragma: no cover - chỉ để hỗ trợ chạy trực tiếp mà không cài pytest
+    import pytest
+    from pytest import approx
+except ModuleNotFoundError:  # Fallback khi chạy "python test_skill_processing.py"
+    import types
+
+    from app.test.pytest_fallback import approx
+
+    pytest = types.ModuleType("pytest")
+    pytest.approx = approx
 
 # Cho phép import module app khi chạy trực tiếp file test
 ROOT_DIR = Path(__file__).resolve().parents[2]
