@@ -121,3 +121,20 @@ def test_normalize_skill_list_stability():
     assert normalize_skill_list(skills_a) == ["nodejs", "react", "rest api"]
     # Cùng một tập, dù ít phần tử hơn vẫn cho kết quả giống nhau
     assert normalize_skill_list(skills_b) == ["nodejs", "react", "rest api"]
+
+
+if __name__ == "__main__":  # pragma: no cover - hỗ trợ chạy trực tiếp bằng python
+    test_file = Path(__file__).resolve()
+    print(f"Chạy test thủ công cho {test_file} ...")
+
+    try:
+        import pytest
+
+        # Gọi pytest để có log chi tiết trên console
+        raise SystemExit(pytest.main([str(test_file)]))
+    except ModuleNotFoundError:
+        print(
+            "Không tìm thấy pytest. Cài bằng `pip install -r requirements-dev.txt` "
+            "hoặc chạy `pytest app/test/test_skill_processing.py -q`."
+        )
+        print("Các hàm test sẽ không chạy khi thiếu pytest.")
