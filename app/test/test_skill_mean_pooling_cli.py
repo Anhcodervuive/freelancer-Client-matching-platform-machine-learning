@@ -15,8 +15,15 @@ Yêu cầu:
 from __future__ import annotations
 
 import math
+import sys
+from pathlib import Path
 from typing import Dict, List
 from sentence_transformers import util
+
+# Giúp chạy trực tiếp từ thư mục app/test bằng cách thêm project root vào sys.path
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.features.skill_processing import aggregate_skill_embedding, normalize_skill_list
 from app.models.ml_models import get_embedding_model
