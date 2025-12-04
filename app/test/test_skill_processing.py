@@ -131,7 +131,23 @@ if __name__ == "__main__":  # pragma: no cover - hỗ trợ chạy trực tiếp
         import pytest
 
         # Gọi pytest để có log chi tiết trên console
-        raise SystemExit(pytest.main([str(test_file)]))
+        exit_code = pytest.main([str(test_file)])
+
+        # Sau khi pytest xong, chạy luôn demo so sánh cosine/overlap để thấy log rõ ràng
+        print("\n\n-----------------------------")
+        print("Chạy thêm demo tính similarity (cosine/overlap) mẫu...")
+        try:
+            from app.test.test_skill_similarity import main as similarity_demo
+
+            similarity_demo()
+        except ModuleNotFoundError as exc:  # sentence-transformers chưa cài
+            missing_pkg = str(exc).split("'")[1] if "'" in str(exc) else str(exc)
+            print(
+                "Không thể chạy demo similarity vì thiếu thư viện: "
+                f"{missing_pkg}.\n"
+                "Cài bổ sung bằng: pip install -r requirements-dev.txt"
+            )
+        raise SystemExit(exit_code)
     except ModuleNotFoundError:
         print(
             "Không tìm thấy pytest. Cài bằng `pip install -r requirements-dev.txt` "
