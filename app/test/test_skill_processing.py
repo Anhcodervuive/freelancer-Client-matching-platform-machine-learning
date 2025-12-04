@@ -2,21 +2,22 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
+# Bổ sung sys.path trước khi import để tránh lỗi ModuleNotFoundError khi chạy trực tiếp
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+
 try:  # pragma: no cover - chỉ để hỗ trợ chạy trực tiếp mà không cài pytest
     import pytest
     from pytest import approx
 except ModuleNotFoundError:  # Fallback khi chạy "python test_skill_processing.py"
     import types
 
+    # import sau khi đã thêm ROOT_DIR vào sys.path
     from app.test.pytest_fallback import approx
 
     pytest = cast(Any, types.ModuleType("pytest"))
     pytest.approx = approx
-
-# Cho phép import module app khi chạy trực tiếp file test
-ROOT_DIR = Path(__file__).resolve().parents[2]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.append(str(ROOT_DIR))
 
 from app.features.skill_processing import (
     aggregate_skill_embedding,
