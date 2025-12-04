@@ -1,6 +1,6 @@
 # Minimal pytest stub so Pyright/Pylance can resolve the import in editors.
 # Install the real dependency via `pip install -r requirements-dev.txt` for runtime.
-from typing import Any, Callable, Iterable, Protocol
+from typing import Any, Callable, Iterable, Protocol, Sequence
 
 class _FixtureFunction(Protocol):
     def __call__(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -25,6 +25,8 @@ skipif: Callable[..., Any]
 parametrize: Callable[..., Any]
 
 def approx(__value: Any, *, rel: float | None = None, abs: float | None = None, nan_ok: bool = False) -> Any: ...
+
+def main(args: Sequence[str] | None = None) -> int: ...
 
 # Fixtures (minimal signatures for Pyright)
 class MonkeyPatch:
