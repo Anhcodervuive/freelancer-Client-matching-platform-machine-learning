@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 try:  # pragma: no cover - chỉ để hỗ trợ chạy trực tiếp mà không cài pytest
     import pytest
@@ -9,7 +10,7 @@ except ModuleNotFoundError:  # Fallback khi chạy "python test_skill_processing
 
     from app.test.pytest_fallback import approx
 
-    pytest = types.ModuleType("pytest")
+    pytest = cast(Any, types.ModuleType("pytest"))
     pytest.approx = approx
 
 # Cho phép import module app khi chạy trực tiếp file test
