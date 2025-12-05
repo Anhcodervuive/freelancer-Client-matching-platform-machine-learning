@@ -57,7 +57,6 @@ async def fetch_jobs(session) -> List[dict]:
         SELECT jrs.job_id, s.name AS skill_name
         FROM job_required_skill jrs
         JOIN skill s ON s.id = jrs.skill_id
-        WHERE jrs.is_deleted = 0
         """
     )
 
