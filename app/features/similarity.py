@@ -2,6 +2,9 @@
 from typing import Dict, Sequence, Optional
 import math
 
+# Trọng số mặc định dùng chung cho API và CLI
+DEFAULT_SIMILARITY_WEIGHTS = {"FULL": 0.2, "SKILLS": 0.6, "DOMAIN": 0.2}
+
 def cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
     dot = sum(x*y for x, y in zip(a, b))
     na = math.sqrt(sum(x*x for x in a))
@@ -23,7 +26,7 @@ def multi_embedding_similarity(
     weights:            {"FULL": 0.6, "SKILLS": 0.3, "DOMAIN": 0.1}
     """
     if weights is None:
-        weights = {"FULL": 0.2, "SKILLS": 0.6, "DOMAIN": 0.2}
+        weights = DEFAULT_SIMILARITY_WEIGHTS
 
     sims: list[float] = []
     w_used: list[float] = []

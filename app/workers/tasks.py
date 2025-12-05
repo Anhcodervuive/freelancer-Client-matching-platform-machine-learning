@@ -5,7 +5,7 @@ import asyncio
 
 from app.db.session import async_session
 from app.db.models import MatchFeature
-from app.features.similarity import multi_embedding_similarity
+from app.features.similarity import DEFAULT_SIMILARITY_WEIGHTS, multi_embedding_similarity
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import Embedding
@@ -56,7 +56,7 @@ async def recompute_matches_for_job(job_id: str, top_n: int = 200):
             if not fr_embs:
                 continue
 
-            score = multi_embedding_similarity(job_embs, fr_embs)
+            score = multi_embedding_similarity(job_embs, fr_embs, weights=DEFAULT_SIMILARITY_WEIGHTS)
             if score is None:
                 continue
 
@@ -101,7 +101,7 @@ async def recompute_matches_for_freelancer(freelancer_id: str, top_n: int = 200)
             if not job_embs:
                 continue
             print('job_id: ' + job_id)
-            score = multi_embedding_similarity(job_embs, fr_embs)
+            score = multi_embedding_similarity(job_embs, fr_embs, weights=DEFAULT_SIMILARITY_WEIGHTS)
             if score is None:
                 continue
 

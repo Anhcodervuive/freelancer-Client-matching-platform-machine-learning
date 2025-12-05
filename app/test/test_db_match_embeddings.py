@@ -34,7 +34,10 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.db.session import AsyncSessionLocal  # noqa: E402
 from app.db.crud import save_embedding, upsert_match_feature  # noqa: E402
 from app.features.skill_processing import aggregate_skill_embedding, normalize_skill_list  # noqa: E402
-from app.features.similarity import multi_embedding_similarity  # noqa: E402
+from app.features.similarity import (
+    DEFAULT_SIMILARITY_WEIGHTS,
+    multi_embedding_similarity,
+)  # noqa: E402
 from app.models.ml_models import embed_text  # noqa: E402
 
 DEFAULT_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
@@ -178,6 +181,7 @@ async def main(model_name: str = DEFAULT_MODEL, top_k: int = 25):
         freelancers = await fetch_freelancers(session)
 
         print(f"Loaded {len(jobs)} job(s) & {len(freelancers)} freelancer(s)")
+        print(f"Similarity weights: {DEFAULT_SIMILARITY_WEIGHTS}")
 
         job_embs_map: Dict[str, Dict[str, List[float]]] = {}
         for job in jobs:
@@ -203,7 +207,11 @@ async def main(model_name: str = DEFAULT_MODEL, top_k: int = 25):
             scored: List[tuple[str, float]] = []
             for fr in freelancers:
                 fr_id = fr["id"]
-                sim = multi_embedding_similarity(job_embs_map[job_id], fr_embs_map[fr_id])
+                sim = multi_embedding_similarity(
+                    job_embs_map[job_id],
+                    fr_embs_map[fr_id],
+                    weights=DEFAULT_SIMILARITY_WEIGHTS,
+                )
                 if sim is None:
                     continue
                 scored.append((fr_id, sim))
