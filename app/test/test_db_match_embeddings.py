@@ -95,7 +95,7 @@ async def fetch_freelancers(session) -> List[dict]:
     )
     sql_fre_skills = text(
         """
-        SELECT fss.user_id, s.name AS skill_name
+        SELECT fss.userId AS user_id, s.name AS skill_name
         FROM freelancer_skill_selection fss
         JOIN skill s ON s.id = fss.skill_id
         WHERE fss.is_deleted = 0
