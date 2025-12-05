@@ -86,6 +86,8 @@ async def upsert_match_feature(
     # nếu đã có record
     if mf:
         # update các field
+        if similarity_score is not None:
+            mf.similarityScore = similarity_score
         if rate_gap is not None:
             mf.rate_gap = rate_gap
         if timezone_gap_hours is not None:
@@ -107,7 +109,7 @@ async def upsert_match_feature(
             id=mf_id,
             job_id=job_id,
             freelancer_id=freelancer_id,
-            similarity_score=similarity_score,
+            similarityScore=similarity_score,
             budget_gap=budget_gap,
             rate_gap=rate_gap,
             timezone_gap_hours=timezone_gap_hours,
