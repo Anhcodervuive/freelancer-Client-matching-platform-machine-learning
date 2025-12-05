@@ -172,7 +172,7 @@ async def persist_embeddings(session, entity_type: str, entity_id: str, embs: Di
         )
 
 
-async def main(model_name: str = DEFAULT_MODEL, top_k: int = 50):
+async def main(model_name: str = DEFAULT_MODEL, top_k: int = 25):
     async with AsyncSessionLocal() as session:
         jobs = await fetch_jobs(session)
         freelancers = await fetch_freelancers(session)
@@ -195,6 +195,8 @@ async def main(model_name: str = DEFAULT_MODEL, top_k: int = 50):
 
         job_top: Dict[str, List[tuple[str, float]]] = {}
         fr_top: Dict[str, List[tuple[str, float]]] = {}
+        job_all_scores: Dict[str, List[tuple[str, float]]] = {}
+        fr_all_scores: Dict[str, List[tuple[str, float]]] = {}
 
         for job in jobs:
             job_id = job["id"]
@@ -208,10 +210,12 @@ async def main(model_name: str = DEFAULT_MODEL, top_k: int = 50):
                 fr_top.setdefault(fr_id, []).append((job_id, sim))
 
             scored.sort(key=lambda x: x[1], reverse=True)
+            job_all_scores[job_id] = scored
             job_top[job_id] = scored[:top_k]
 
         for fr_id, pairs in fr_top.items():
             pairs.sort(key=lambda x: x[1], reverse=True)
+            fr_all_scores[fr_id] = pairs
             fr_top[fr_id] = pairs[:top_k]
 
         # Union của top-N mỗi job và top-N mỗi freelancer để không lưu quá nhiều bản ghi
@@ -235,15 +239,56 @@ async def main(model_name: str = DEFAULT_MODEL, top_k: int = 50):
                 p_client_accept=sim * 0.9,
             )
 
+        fr_lookup = {fr["id"]: fr for fr in freelancers}
+        job_lookup = {job["id"]: job for job in jobs}
+
         for job in jobs:
             job_id = job["id"]
             top_matches = job_top.get(job_id, [])
+            rest_matches = job_all_scores.get(job_id, [])[top_k:]
 
             print("\n=== Job:", job["title"])
             print("Skills:", normalize_skill_list(job.get("skills", [])))
+            print(f"Top {top_k} freelancers saved to match_feature:")
             for fr_id, score in top_matches:
-                fr = next(f for f in freelancers if f["id"] == fr_id)
-                print(f"  - {fr['title'] or fr_id}: {score:.4f} | skills={normalize_skill_list(fr.get('skills', []))}")
+                fr = fr_lookup.get(fr_id, {})
+                print(
+                    f"  - Freelancer: {fr.get('title') or fr_id} | score={score:.4f} | "
+                    f"skills={normalize_skill_list(fr.get('skills', []))}"
+                )
+
+            if rest_matches:
+                print("  Not selected:")
+                for fr_id, score in rest_matches:
+                    fr = fr_lookup.get(fr_id, {})
+                    print(
+                        f"    * Freelancer: {fr.get('title') or fr_id} | score={score:.4f} | "
+                        f"skills={normalize_skill_list(fr.get('skills', []))}"
+                    )
+
+        for fr in freelancers:
+            fr_id = fr["id"]
+            top_jobs = fr_top.get(fr_id, [])
+            rest_jobs = fr_all_scores.get(fr_id, [])[top_k:]
+
+            print("\n=== Freelancer:", fr.get("title") or fr_id)
+            print("Skills:", normalize_skill_list(fr.get("skills", [])))
+            print(f"Top {top_k} job posts saved to match_feature:")
+            for job_id, score in top_jobs:
+                job = job_lookup.get(job_id, {})
+                print(
+                    f"  - Job: {job.get('title') or job_id} | score={score:.4f} | "
+                    f"skills={normalize_skill_list(job.get('skills', []))}"
+                )
+
+            if rest_jobs:
+                print("  Not selected:")
+                for job_id, score in rest_jobs:
+                    job = job_lookup.get(job_id, {})
+                    print(
+                        f"    * Job: {job.get('title') or job_id} | score={score:.4f} | "
+                        f"skills={normalize_skill_list(job.get('skills', []))}"
+                    )
 
 
 if __name__ == "__main__":
