@@ -193,6 +193,9 @@ async def main(model_name: str = DEFAULT_MODEL, top_k: int = 50):
 
         print("Embeddings saved. Computing matches...")
 
+        job_top: Dict[str, List[tuple[str, float]]] = {}
+        fr_top: Dict[str, List[tuple[str, float]]] = {}
+
         for job in jobs:
             job_id = job["id"]
             scored: List[tuple[str, float]] = []
@@ -202,21 +205,39 @@ async def main(model_name: str = DEFAULT_MODEL, top_k: int = 50):
                 if sim is None:
                     continue
                 scored.append((fr_id, sim))
+                fr_top.setdefault(fr_id, []).append((job_id, sim))
 
             scored.sort(key=lambda x: x[1], reverse=True)
-            top_matches = scored[:top_k]
+            job_top[job_id] = scored[:top_k]
 
-            # Chỉ lưu top-N để tránh phình bảng match_feature
-            for fr_id, sim in top_matches:
-                await upsert_match_feature(
-                    session,
-                    job_id=job_id,
-                    freelancer_id=fr_id,
-                    similarity_score=sim,
-                    p_match=sim,
-                    p_freelancer_accept=sim * 0.9,
-                    p_client_accept=sim * 0.9,
-                )
+        for fr_id, pairs in fr_top.items():
+            pairs.sort(key=lambda x: x[1], reverse=True)
+            fr_top[fr_id] = pairs[:top_k]
+
+        # Union của top-N mỗi job và top-N mỗi freelancer để không lưu quá nhiều bản ghi
+        pairs_to_persist = {
+            (job_id, fr_id): score
+            for job_id, matches in job_top.items()
+            for fr_id, score in matches
+        }
+        for fr_id, matches in fr_top.items():
+            for job_id, score in matches:
+                pairs_to_persist.setdefault((job_id, fr_id), score)
+
+        for (job_id, fr_id), sim in pairs_to_persist.items():
+            await upsert_match_feature(
+                session,
+                job_id=job_id,
+                freelancer_id=fr_id,
+                similarity_score=sim,
+                p_match=sim,
+                p_freelancer_accept=sim * 0.9,
+                p_client_accept=sim * 0.9,
+            )
+
+        for job in jobs:
+            job_id = job["id"]
+            top_matches = job_top.get(job_id, [])
 
             print("\n=== Job:", job["title"])
             print("Skills:", normalize_skill_list(job.get("skills", [])))
