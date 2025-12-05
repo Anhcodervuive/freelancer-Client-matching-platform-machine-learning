@@ -172,7 +172,7 @@ async def persist_embeddings(session, entity_type: str, entity_id: str, embs: Di
         )
 
 
-async def main(model_name: str = DEFAULT_MODEL, top_k: int = 5):
+async def main(model_name: str = DEFAULT_MODEL, top_k: int = 50):
     async with AsyncSessionLocal() as session:
         jobs = await fetch_jobs(session)
         freelancers = await fetch_freelancers(session)
@@ -203,6 +203,11 @@ async def main(model_name: str = DEFAULT_MODEL, top_k: int = 5):
                     continue
                 scored.append((fr_id, sim))
 
+            scored.sort(key=lambda x: x[1], reverse=True)
+            top_matches = scored[:top_k]
+
+            # Chỉ lưu top-N để tránh phình bảng match_feature
+            for fr_id, sim in top_matches:
                 await upsert_match_feature(
                     session,
                     job_id=job_id,
@@ -213,10 +218,9 @@ async def main(model_name: str = DEFAULT_MODEL, top_k: int = 5):
                     p_client_accept=sim * 0.9,
                 )
 
-            scored.sort(key=lambda x: x[1], reverse=True)
             print("\n=== Job:", job["title"])
             print("Skills:", normalize_skill_list(job.get("skills", [])))
-            for fr_id, score in scored[:top_k]:
+            for fr_id, score in top_matches:
                 fr = next(f for f in freelancers if f["id"] == fr_id)
                 print(f"  - {fr['title'] or fr_id}: {score:.4f} | skills={normalize_skill_list(fr.get('skills', []))}")
 
