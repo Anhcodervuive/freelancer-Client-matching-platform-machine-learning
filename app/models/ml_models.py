@@ -1,7 +1,8 @@
 # app/models/ml_models.py
 from functools import lru_cache
 from typing import List, Union
-
+import joblib
+from pathlib import Path
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
@@ -61,3 +62,47 @@ def predict_p_accept(job_embedding: List[float], freelancer_embedding: List[floa
     """
     base = predict_p_match(job_embedding, freelancer_embedding)
     return float(0.9 * base)
+
+P_FREELANCER_MODEL_PATH = Path(__file__).resolve().parent / "logreg_p_freelancer_accept.pkl"
+
+P_FREELANCER_MODEL_PATH = Path(__file__).resolve().parent / "logreg_p_freelancer_accept.pkl"
+
+
+@lru_cache(maxsize=1)
+def get_p_freelancer_accept_model():
+    return joblib.load(P_FREELANCER_MODEL_PATH)
+
+
+def predict_p_freelancer_accept(features: list[float]) -> float:
+    """
+    Dự đoán xác suất freelancer ACCEPT lời mời job.
+
+    features phải theo đúng thứ tự (20 chiều), giống train_p_freelancer_accept:
+
+        [
+            similarity_score,
+            budget_gap,
+            timezone_gap_hours,
+            level_gap,
+            job_experience_level_num,
+            job_required_skill_count,
+            job_screening_question_count,
+            job_stats_applies,
+            job_stats_offers,
+            job_stats_accepts,
+            freelancer_skill_count,
+            freelancer_stats_applies,
+            freelancer_stats_offers,
+            freelancer_stats_accepts,
+            freelancer_invite_accept_rate,
+            skill_overlap_count,
+            skill_overlap_ratio,
+            has_past_collaboration,
+            past_collaboration_count,
+            has_viewed_job,
+        ]
+    """
+    model = get_p_freelancer_accept_model()
+    x = np.array(features, dtype=float).reshape(1, -1)
+    proba = model.predict_proba(x)[0, 1]
+    return float(proba)

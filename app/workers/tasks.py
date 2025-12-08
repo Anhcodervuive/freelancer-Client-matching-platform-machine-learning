@@ -1,27 +1,31 @@
-# app/workers/tasks.py (tiếp)
+# app/workers/tasks.py
 
 from multiprocessing import Process
 import asyncio
+from typing import Dict, List, Tuple
+
+from sqlalchemy import select
 
 from app.db.session import async_session
-from app.db.models import MatchFeature
-from app.features.similarity import DEFAULT_SIMILARITY_WEIGHTS, multi_embedding_similarity
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.models import Embedding
-from typing import Dict, List
+from app.db.models import Embedding, MatchFeature, JobPost
+from app.db.crud import upsert_match_feature
+from app.features.similarity import (
+    DEFAULT_SIMILARITY_WEIGHTS,
+    multi_embedding_similarity,
+)
 
 DEFAULT_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 
 async def get_entity_embeddings(
-    session: AsyncSession,
-    entity_type: str,       # "JOB" | "FREELANCER"
+    session,
+    entity_type: str,   # "JOB" | "FREELANCER"
     entity_id: str,
 ) -> Dict[str, List[float]]:
     """
     Lấy tất cả embedding của 1 entity, key theo kind:
-    return kiểu: {"FULL": [...], "SKILLS": [...], "DOMAIN": [...]}
+      {"FULL": [...], "SKILLS": [...], "DOMAIN": [...]}
+    Chỉ lấy cho 1 model (DEFAULT_MODEL).
     """
     stmt = (
         select(Embedding)
@@ -33,96 +37,96 @@ async def get_entity_embeddings(
 
     result: Dict[str, List[float]] = {}
     for row in rows:
-        # row.kind = "FULL" | "SKILLS" | "DOMAIN"
+        # row.kind: "FULL" | "SKILLS" | "DOMAIN"
         result[row.kind] = row.vector
     return result
 
 
 async def recompute_matches_for_job(job_id: str, top_n: int = 200):
+    """
+    Recompute similarity cho 1 job với các freelancer hiện có trong match_feature
+    (hoặc sau này bạn có thể thay bằng bảng freelancer).
+    """
     async with async_session() as session:
-        # 1) Lấy tất cả embedding (FULL/SKILLS/DOMAIN) của job
         job_embs = await get_entity_embeddings(session, "JOB", job_id)
         if not job_embs:
+            print(f"[recompute_matches_for_job] No embeddings for JOB {job_id}")
             return
 
-        # 2) Lấy list freelancer_id mà mình muốn xét (ví dụ: tất cả freelancer)
+        # Lấy list freelancer_id hiện có (có thể là toàn bộ freelancer trong hệ thống sau này)
         stmt_fids = select(MatchFeature.freelancer_id).distinct()
         freelancer_ids = [row[0] for row in (await session.execute(stmt_fids)).all()]
 
-        scored: list[tuple[str, float]] = []
+        scored: List[Tuple[str, float]] = []
 
         for fid in freelancer_ids:
             fr_embs = await get_entity_embeddings(session, "FREELANCER", fid)
             if not fr_embs:
                 continue
 
-            score = multi_embedding_similarity(job_embs, fr_embs, weights=DEFAULT_SIMILARITY_WEIGHTS)
-            if score is None:
+            sim = multi_embedding_similarity(job_embs, fr_embs, weights=DEFAULT_SIMILARITY_WEIGHTS)
+            if sim is None:
                 continue
 
-            scored.append((fid, score))
+            scored.append((fid, sim))
 
-        # 3) Lấy top_n theo similarity
+        # sort lấy top_n
         scored.sort(key=lambda x: x[1], reverse=True)
         top = scored[:top_n]
 
-        # 4) Upsert vào bảng match_feature
+        # upsert match_feature
         for freelancer_id, sim in top:
-            mf_id = f"{job_id}-{freelancer_id}"
-            mf = await session.get(MatchFeature, mf_id)
-            if not mf:
-                mf = MatchFeature(
-                    id=mf_id,
-                    job_id=job_id,
-                    freelancer_id=freelancer_id,
-                )
-            mf.similarityScore = sim  # cột similarity_score
-            session.add(mf)
+            await upsert_match_feature(
+                session,
+                job_id=job_id,
+                freelancer_id=freelancer_id,
+                similarity_score=sim,
+                # các feature khác (budget_gap, level_gap, ...) để sau cũng được
+            )
 
-        await session.commit()
+        print(f"[recompute_matches_for_job] JOB {job_id} => updated {len(top)} pairs.")
 
 
 async def recompute_matches_for_freelancer(freelancer_id: str, top_n: int = 200):
+    """
+    Recompute similarity cho 1 freelancer với các job còn sống (is_deleted = 0).
+    """
     async with async_session() as session:
         fr_embs = await get_entity_embeddings(session, "FREELANCER", freelancer_id)
         if not fr_embs:
+            print(f"[recompute_matches_for_freelancer] No embeddings for FREELANCER {freelancer_id}")
             return
 
-        # Lấy list job_id muốn xét (ví dụ: tất cả job đang PUBLISHED)
-        from app.db.models import JobPost  # nếu bạn đã map
-
-        stmt_jobs = select(JobPost.id).where(JobPost.is_deleted == False)
+        # Lấy list job_id muốn xét (job còn active, chưa xoá)
+        stmt_jobs = select(JobPost.id).where(JobPost.is_deleted == 0)
         job_ids = [row[0] for row in (await session.execute(stmt_jobs)).all()]
 
-        scored: list[tuple[str, float]] = []
+        scored: List[Tuple[str, float]] = []
 
         for job_id in job_ids:
             job_embs = await get_entity_embeddings(session, "JOB", job_id)
             if not job_embs:
                 continue
-            print('job_id: ' + job_id)
-            score = multi_embedding_similarity(job_embs, fr_embs, weights=DEFAULT_SIMILARITY_WEIGHTS)
-            if score is None:
+
+            sim = multi_embedding_similarity(job_embs, fr_embs, weights=DEFAULT_SIMILARITY_WEIGHTS)
+            if sim is None:
                 continue
 
-            scored.append((job_id, score))
+            scored.append((job_id, sim))
 
         scored.sort(key=lambda x: x[1], reverse=True)
         top = scored[:top_n]
 
         for job_id, sim in top:
-            mf_id = f"{job_id}-{freelancer_id}"
-            mf = await session.get(MatchFeature, mf_id)
-            if not mf:
-                mf = MatchFeature(
-                    id=mf_id,
-                    job_id=job_id,
-                    freelancer_id=freelancer_id,
-                )
-            mf.similarityScore = sim
-            session.add(mf)
+            await upsert_match_feature(
+                session,
+                job_id=job_id,
+                freelancer_id=freelancer_id,
+                similarity_score=sim,
+            )
 
-        await session.commit()
+        print(f"[recompute_matches_for_freelancer] FREELANCER {freelancer_id} => updated {len(top)} pairs.")
+
 
 def _job_worker(job_id: str, top_n: int) -> None:
     asyncio.run(recompute_matches_for_job(job_id, top_n))
@@ -135,7 +139,7 @@ def _freelancer_worker(freelancer_id: str, top_n: int) -> None:
 def schedule_recompute_for_job(job_id: str, top_n: int = 200) -> None:
     """
     Spawn 1 process nền để recompute match cho job.
-    Dùng được trên Windows (spawn) vì không gọi khi import module.
+    Dùng được trên Windows (spawn).
     """
     p = Process(target=_job_worker, args=(job_id, top_n), daemon=True)
     p.start()

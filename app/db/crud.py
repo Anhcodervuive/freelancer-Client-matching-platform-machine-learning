@@ -65,66 +65,67 @@ async def upsert_match_feature(
     *,
     job_id: str,
     freelancer_id: str,
+
+    # ----- CORE SIMILARITY / GAP -----
     similarity_score: float | None = None,
     budget_gap: float | None = None,
-    rate_gap: float | None = None,
     timezone_gap_hours: int | None = None,
     level_gap: int | None = None,
+
+    # ----- JOB FEATURES -----
+    job_experience_level_num: int | None = None,
+    job_required_skill_count: int | None = None,
+    job_screening_question_count: int | None = None,
+    job_stats_applies: int | None = None,
+    job_stats_offers: int | None = None,
+    job_stats_accepts: int | None = None,
+
+    # ----- FREELANCER FEATURES -----
+    freelancer_skill_count: int | None = None,
+    freelancer_stats_applies: int | None = None,
+    freelancer_stats_offers: int | None = None,
+    freelancer_stats_accepts: int | None = None,
+    freelancer_invite_accept_rate: float | None = None,
+    freelancer_region: str | None = None,
+
+    # ----- PAIRWISE FEATURES -----
+    skill_overlap_count: int | None = None,
+    skill_overlap_ratio: float | None = None,
+    has_past_collaboration: bool | None = None,
+    past_collaboration_count: int | None = None,
+    has_viewed_job: bool | None = None,
+
+    # ----- ML OUTPUT -----
     p_match: float | None = None,
     p_freelancer_accept: float | None = None,
     p_client_accept: float | None = None,
 ):
     """
-    UPSERT 1 record match_feature cho (job, freelancer).
-    Mặc định không ghi đè field nào nếu param = None.
+    Full upsert match_feature cho ML.
+    Chỉ ghi đè field nếu param != None.
     """
     mf_id = f"{job_id}-{freelancer_id}"
     mf = await session.get(MatchFeature, mf_id)
-
     now = datetime.now(timezone.utc)
 
-    # nếu đã có record
-    if mf:
-        # update các field
-        if similarity_score is not None:
-            mf.similarityScore = similarity_score
-        if rate_gap is not None:
-            mf.rate_gap = rate_gap
-        if timezone_gap_hours is not None:
-            mf.timezone_gap_hours = timezone_gap_hours
-        if level_gap is not None:
-            mf.level_gap = level_gap
-        if p_match is not None:
-            mf.p_match = p_match
-        if p_freelancer_accept is not None:
-            mf.p_freelancer_accept = p_freelancer_accept
-        if p_client_accept is not None:
-            mf.p_client_accept = p_client_accept
-
-        mf.updated_at = now
-
-    else:
-        # create mới
+    if not mf:
         mf = MatchFeature(
             id=mf_id,
             job_id=job_id,
             freelancer_id=freelancer_id,
-            similarityScore=similarity_score,
-            budget_gap=budget_gap,
-            rate_gap=rate_gap,
-            timezone_gap_hours=timezone_gap_hours,
-            level_gap=level_gap,
-            p_match=p_match,
-            p_freelancer_accept=p_freelancer_accept,
-            p_client_accept=p_client_accept,
-            last_interaction_at=None,
-
-            # ✅ set tay khi insert
             created_at=now,
             updated_at=now,
         )
         session.add(mf)
 
+    # cập nhật field nếu param != None
+    for field, value in locals().items():
+        if field in ["session", "job_id", "freelancer_id", "mf", "mf_id", "now"]:
+            continue
+        if value is not None:
+            setattr(mf, field, value)
+
+    mf.updated_at = now
+
     await session.commit()
-    await session.refresh(mf)
     return mf
