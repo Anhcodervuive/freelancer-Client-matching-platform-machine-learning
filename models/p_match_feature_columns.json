@@ -1,0 +1,23 @@
+[
+  "freelancer_invite_accept_rate",
+  "freelancer_skill_count",
+  "freelancer_stats_accepts",
+  "freelancer_stats_applies",
+  "freelancer_stats_offers",
+  "has_past_collaboration",
+  "has_viewed_job",
+  "job_experience_level_num",
+  "job_required_skill_count",
+  "job_screening_question_count",
+  "job_stats_accepts",
+  "job_stats_applies",
+  "job_stats_offers",
+  "level_gap",
+  "past_collaboration_count",
+  "similarity_score",
+  "skill_overlap_count",
+  "skill_overlap_ratio",
+  "timezone_gap_hours",
+  "region_UNKNOWN",
+  "region_UNKNOWN"
+]
