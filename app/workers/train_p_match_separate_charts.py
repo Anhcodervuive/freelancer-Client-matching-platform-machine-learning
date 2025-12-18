@@ -214,83 +214,91 @@ def create_feature_importance_chart(model, feature_cols):
 def create_dataset_overview_chart(dataset_info, feature_cols):
     """Chart 4: Dataset Overview"""
     
-    fig = plt.figure(figsize=(18, 14))
-    
-    gs = fig.add_gridspec(2, 2, hspace=0.4, wspace=0.3)
-    
-    ax1 = fig.add_subplot(gs[0, 0])
-    ax2 = fig.add_subplot(gs[0, 1])
-    ax3 = fig.add_subplot(gs[1, 0])
-    ax4 = fig.add_subplot(gs[1, 1])
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    ax1, ax2, ax3, ax4 = axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]
     
     fig.suptitle('DATASET OVERVIEW - p_match Model', 
-                 fontsize=26, fontweight='bold', y=0.98)
+                 fontsize=22, fontweight='bold', y=1.02)
     
-    # ===== 1. Label Distribution =====
-    labels = ['NO MATCH\n({:,})'.format(dataset_info['negative']), 
-              'MATCH\n({:,})'.format(dataset_info['positive'])]
+    # ===== 1. Label Distribution (Pie Chart) =====
     sizes = [dataset_info['negative'], dataset_info['positive']]
     colors = ['#FF6B6B', '#4ECDC4']
+    explode = (0.02, 0.02)
     
     wedges, texts, autotexts = ax1.pie(
-        sizes, labels=labels, autopct='%1.1f%%', 
-        colors=colors, startangle=90, 
-        textprops={'fontsize': 14, 'fontweight': 'bold'},
-        pctdistance=0.6,
-        labeldistance=1.15
+        sizes, 
+        explode=explode,
+        autopct='%1.1f%%', 
+        colors=colors, 
+        startangle=90,
+        textprops={'fontsize': 14}
     )
-    ax1.set_title('Phan Bo Nhan (Label Distribution)', fontsize=18, fontweight='bold', pad=15)
     
     for autotext in autotexts:
         autotext.set_fontsize(16)
         autotext.set_fontweight('bold')
     
-    # ===== 2. Sample Counts =====
-    categories = ['Training', 'Testing', 'Total']
+    ax1.legend(
+        [f'NO MATCH: {dataset_info["negative"]:,}', 
+         f'MATCH: {dataset_info["positive"]:,}'],
+        loc='upper left',
+        fontsize=12
+    )
+    ax1.set_title('Phan Bo Nhan', fontsize=16, fontweight='bold')
+    
+    # ===== 2. Sample Counts (Bar Chart) =====
+    categories = ['Train', 'Test', 'Total']
     counts = [dataset_info['train'], dataset_info['test'], dataset_info['total']]
     colors_bar = ['#45B7D1', '#96CEB4', '#FFA726']
     
-    bars = ax2.bar(categories, counts, color=colors_bar, alpha=0.85, width=0.6)
-    ax2.set_title('So Luong Samples', fontsize=18, fontweight='bold', pad=15)
-    ax2.set_ylabel('So Luong', fontsize=14, fontweight='bold')
-    ax2.set_ylim(0, max(counts) * 1.2)
+    bars = ax2.bar(categories, counts, color=colors_bar, alpha=0.85, width=0.5)
+    ax2.set_title('So Luong Samples', fontsize=16, fontweight='bold')
+    ax2.set_ylabel('So Luong', fontsize=12)
+    ax2.set_ylim(0, max(counts) * 1.25)
     
     for bar, count in zip(bars, counts):
-        ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(counts)*0.02, 
+        ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(counts)*0.03, 
                 f'{count:,}', ha='center', va='bottom', 
-                fontsize=16, fontweight='bold')
+                fontsize=14, fontweight='bold')
     
-    ax2.tick_params(axis='x', labelsize=14)
-    
-    # ===== 3. Model Info =====
+    # ===== 3. Model Info - Dùng table thay vì text =====
     ax3.axis('off')
-    model_info = (
-        "THONG TIN MO HINH\n"
-        "=" * 35 + "\n\n"
-        f"Algorithm: Logistic Regression\n"
-        f"Features: {len(feature_cols)} dac trung\n"
-        f"Preprocessing: StandardScaler\n"
-        f"Class Weight: Balanced\n\n"
-        "MUC TIEU:\n"
-        "Du doan xac suat cap job-freelancer\n"
-        "co thanh cong (contract/offer accepted)\n\n"
-        f"Tong samples: {dataset_info['total']:,}\n"
-        f"Ty le Match: {dataset_info['pos_rate']:.1%}\n"
-        f"Ty le No Match: {dataset_info['neg_rate']:.1%}"
+    ax3.set_title('Thong Tin Mo Hinh', fontsize=16, fontweight='bold')
+    
+    # Tạo table data
+    table_data = [
+        ['Algorithm', 'Logistic Regression'],
+        ['Features', f'{len(feature_cols)} dac trung'],
+        ['Preprocessing', 'StandardScaler'],
+        ['Class Weight', 'Balanced'],
+        ['', ''],
+        ['Tong samples', f'{dataset_info["total"]:,}'],
+        ['Ty le Match', f'{dataset_info["pos_rate"]:.1%}'],
+        ['Ty le No Match', f'{dataset_info["neg_rate"]:.1%}'],
+    ]
+    
+    table = ax3.table(
+        cellText=table_data,
+        colLabels=['Thong so', 'Gia tri'],
+        loc='center',
+        cellLoc='left',
+        colWidths=[0.4, 0.4]
     )
+    table.auto_set_font_size(False)
+    table.set_fontsize(12)
+    table.scale(1.2, 1.8)
     
-    ax3.text(0.5, 0.5, model_info, transform=ax3.transAxes, 
-             fontsize=15, verticalalignment='center', horizontalalignment='center',
-             fontweight='bold', family='monospace',
-             bbox=dict(boxstyle="round,pad=1", facecolor="lightcyan", alpha=0.9))
-    ax3.set_title('Thong Tin Mo Hinh', fontsize=18, fontweight='bold', pad=15)
+    # Style header
+    for i in range(2):
+        table[(0, i)].set_facecolor('#4ECDC4')
+        table[(0, i)].set_text_props(fontweight='bold', color='white')
     
-    # ===== 4. Feature Categories =====
+    # ===== 4. Feature Categories (Bar Chart) =====
     # Count actual feature categories
-    core_count = 4  # similarity, budget_gap, timezone_gap, level_gap
-    job_count = 6   # job_*
-    fl_count = 6    # freelancer_*
-    pair_count = 5  # skill_overlap, has_past_collaboration, etc.
+    core_count = 4
+    job_count = 6
+    fl_count = 6
+    pair_count = 5
     region_count = len([c for c in feature_cols if c.startswith('region_')])
     
     feature_categories = {'Core': core_count, 'Job': job_count, 
@@ -300,23 +308,23 @@ def create_dataset_overview_chart(dataset_info, feature_cols):
     
     colors_feat = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFA726'][:len(feature_categories)]
     bars_feat = ax4.bar(feature_categories.keys(), feature_categories.values(), 
-                        color=colors_feat, alpha=0.85, width=0.6)
-    ax4.set_title('Phan Loai Features', fontsize=18, fontweight='bold', pad=15)
-    ax4.set_ylabel('So Luong', fontsize=14, fontweight='bold')
-    ax4.set_ylim(0, max(feature_categories.values()) + 3)
+                        color=colors_feat, alpha=0.85, width=0.5)
+    ax4.set_title('Phan Loai Features', fontsize=16, fontweight='bold')
+    ax4.set_ylabel('So Luong', fontsize=12)
+    ax4.set_ylim(0, max(feature_categories.values()) + 4)
     
     for bar, count in zip(bars_feat, feature_categories.values()):
-        ax4.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.2, 
+        ax4.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.3, 
                 f'{count}', ha='center', va='bottom', 
-                fontsize=16, fontweight='bold')
+                fontsize=14, fontweight='bold')
     
-    ax4.tick_params(axis='x', labelsize=14)
-    
-    ax4.text(0.5, 0.9, f'Tong: {len(feature_cols)} features', 
+    # Total annotation
+    ax4.text(0.5, 0.92, f'Tong: {len(feature_cols)} features', 
              transform=ax4.transAxes, ha='center',
-             fontsize=14, fontweight='bold',
-             bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
+             fontsize=12, fontweight='bold',
+             bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", alpha=0.9))
     
+    plt.tight_layout()
     output_file = OUTPUT_DIR / "04_dataset_overview.png"
     plt.savefig(output_file, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
