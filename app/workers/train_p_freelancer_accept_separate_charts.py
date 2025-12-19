@@ -36,46 +36,41 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 
 def create_confusion_matrix_chart(y_test, y_pred):
-    """Chart 1: Confusion Matrix"""
+    """Chart 1: Confusion Matrix - Font lớn cho in A4"""
     
-    # Tăng figsize để có nhiều không gian hơn
-    fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+    fig, ax = plt.subplots(1, 1, figsize=(14, 12))
     
     cm = confusion_matrix(y_test, y_pred)
     
-    # Create heatmap
     im = ax.imshow(cm, interpolation='nearest', cmap='Blues')
     
-    # Title - đặt ở trên cùng với pad lớn
+    # Title - font 32
     ax.set_title('CONFUSION MATRIX\np_freelancer_accept Model', 
-                 fontsize=24, fontweight='bold', pad=20)
+                 fontsize=32, fontweight='bold', pad=25)
     
-    # Add numbers in cells
+    # Số trong ô - font 48
     thresh = cm.max() / 2.
     for i in range(2):
         for j in range(2):
             text_color = "white" if cm[i, j] > thresh else "black"
             ax.text(j, i, f'{cm[i, j]}', ha="center", va="center",
-                   color=text_color, fontsize=36, fontweight='bold')
+                   color=text_color, fontsize=48, fontweight='bold')
     
-    # Labels - đơn giản hóa để tránh đè
+    # Labels - font 24
     ax.set_xticks([0, 1])
     ax.set_yticks([0, 1])
-    ax.set_xticklabels(['DECLINED', 'ACCEPTED'], fontsize=18, fontweight='bold')
-    ax.set_yticklabels(['DECLINED', 'ACCEPTED'], fontsize=18, fontweight='bold')
-    ax.set_xlabel('DU DOAN (PREDICTED)', fontsize=18, fontweight='bold', labelpad=15)
-    ax.set_ylabel('THUC TE (ACTUAL)', fontsize=18, fontweight='bold', labelpad=15)
+    ax.set_xticklabels(['DECLINED', 'ACCEPTED'], fontsize=24, fontweight='bold')
+    ax.set_yticklabels(['DECLINED', 'ACCEPTED'], fontsize=24, fontweight='bold')
+    ax.set_xlabel('DU DOAN (PREDICTED)', fontsize=26, fontweight='bold', labelpad=20)
+    ax.set_ylabel('THUC TE (ACTUAL)', fontsize=26, fontweight='bold', labelpad=20)
     
-    # Accuracy - đặt bên dưới với khoảng cách lớn hơn
+    # Accuracy - font 28
     accuracy = (cm[0,0] + cm[1,1]) / cm.sum()
-    
-    # Thêm text box riêng biệt bên dưới figure
     fig.text(0.5, 0.02, f'ACCURACY: {accuracy:.1%}', 
-             ha='center', fontsize=22, fontweight='bold',
+             ha='center', fontsize=28, fontweight='bold',
              bbox=dict(boxstyle="round,pad=0.8", facecolor="yellow", alpha=0.9))
     
-    # Điều chỉnh layout để có không gian cho text bên dưới
-    plt.subplots_adjust(bottom=0.15)
+    plt.subplots_adjust(bottom=0.12)
     
     output_file = OUTPUT_DIR / "01_confusion_matrix.png"
     plt.savefig(output_file, dpi=300, bbox_inches='tight', facecolor='white')
@@ -85,13 +80,12 @@ def create_confusion_matrix_chart(y_test, y_pred):
 
 
 def create_performance_metrics_chart(y_test, y_pred):
-    """Chart 2: Performance Metrics"""
+    """Chart 2: Performance Metrics - Font lớn cho in A4"""
     
-    fig, ax = plt.subplots(1, 1, figsize=(14, 10))
+    fig, ax = plt.subplots(1, 1, figsize=(16, 12))
     
     from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
     
-    # Tên ngắn gọn hơn để tránh đè
     metrics = {
         'ACCURACY': accuracy_score(y_test, y_pred),
         'PRECISION': precision_score(y_test, y_pred),
@@ -101,29 +95,29 @@ def create_performance_metrics_chart(y_test, y_pred):
     
     colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
     x_pos = range(len(metrics))
-    bars = ax.bar(x_pos, list(metrics.values()), color=colors, alpha=0.85, width=0.6)
+    bars = ax.bar(x_pos, list(metrics.values()), color=colors, alpha=0.85, width=0.55)
     
-    # Title
+    # Title - font 32
     ax.set_title('PERFORMANCE METRICS\np_freelancer_accept Model', 
-                 fontsize=24, fontweight='bold', pad=20)
+                 fontsize=32, fontweight='bold', pad=25)
     
-    # Labels
+    # Labels - font 22
     ax.set_xticks(x_pos)
-    ax.set_xticklabels(list(metrics.keys()), fontsize=16, fontweight='bold')
-    ax.set_ylabel('DIEM SO (SCORE)', fontsize=18, fontweight='bold')
-    ax.set_ylim(0, 1.25)  # Tăng ylim để có không gian cho text
+    ax.set_xticklabels(list(metrics.keys()), fontsize=22, fontweight='bold')
+    ax.set_ylabel('DIEM SO (SCORE)', fontsize=24, fontweight='bold')
+    ax.set_ylim(0, 1.3)
+    ax.tick_params(axis='y', labelsize=18)
     
-    # Chỉ hiển thị 1 giá trị trên mỗi bar - kết hợp số và %
+    # Giá trị trên bar - font 22
     for bar, value in zip(bars, metrics.values()):
-        # Hiển thị cả số thập phân và % trên cùng 1 dòng
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.03, 
                 f'{value:.3f} ({value:.1%})', 
                 ha='center', va='bottom', 
-                fontsize=16, fontweight='bold')
+                fontsize=22, fontweight='bold')
     
     ax.grid(True, alpha=0.3, axis='y')
     
-    # Explanation box - đặt ở góc trên bên phải
+    # Explanation box - font 14
     explanation = (
         "ACCURACY: Ty le du doan dung tong the\n"
         "PRECISION: Trong so du doan ACCEPT, bao nhieu % dung\n"
@@ -131,7 +125,7 @@ def create_performance_metrics_chart(y_test, y_pred):
         "F1-SCORE: Trung binh dieu hoa cua Precision va Recall"
     )
     ax.text(0.98, 0.98, explanation, transform=ax.transAxes, 
-            fontsize=11, verticalalignment='top', horizontalalignment='right',
+            fontsize=14, verticalalignment='top', horizontalalignment='right',
             bbox=dict(boxstyle="round,pad=0.5", facecolor="lightyellow", alpha=0.9))
     
     plt.tight_layout()
@@ -143,10 +137,10 @@ def create_performance_metrics_chart(y_test, y_pred):
 
 
 def create_feature_importance_chart(model, feature_cols):
-    """Chart 3: Feature Importance"""
+    """Chart 3: Feature Importance - Font CỰC LỚN cho in A4"""
     
-    # Tăng figsize width để có không gian cho text bên phải
-    fig, ax = plt.subplots(1, 1, figsize=(16, 12))
+    # Figsize rất cao để mỗi bar có nhiều không gian
+    fig, ax = plt.subplots(1, 1, figsize=(20, 18))
     
     coef = model.named_steps['logreg'].coef_[0]
     feature_importance = pd.DataFrame({
@@ -155,14 +149,15 @@ def create_feature_importance_chart(model, feature_cols):
         'coefficient': coef
     }).sort_values('importance', ascending=True)
     
-    top_features = feature_importance.tail(10)
+    # Chỉ lấy top 8 để có nhiều không gian hơn
+    top_features = feature_importance.tail(8)
     
     colors = ['#FF6B6B' if x < 0 else '#4ECDC4' for x in top_features['coefficient']]
     
+    # Height 0.6 để có khoảng cách giữa các bar
     bars = ax.barh(range(len(top_features)), top_features['importance'], 
-                   color=colors, alpha=0.85, height=0.7)
+                   color=colors, alpha=0.85, height=0.6)
     
-    # Vietnamese translations
     translations = {
         'similarity_score': 'Diem Tuong Dong',
         'skill_overlap_ratio': 'Ty Le Skill Trung',
@@ -183,35 +178,39 @@ def create_feature_importance_chart(model, feature_cols):
     clean_names = [translations.get(name, name.replace('_', ' ').title()) 
                    for name in top_features['feature']]
     
+    # Y labels - font 28
     ax.set_yticks(range(len(top_features)))
-    ax.set_yticklabels(clean_names, fontsize=14, fontweight='bold')
+    ax.set_yticklabels(clean_names, fontsize=28, fontweight='bold')
     
-    ax.set_title('TOP 10 FEATURE IMPORTANCE\np_freelancer_accept Model', 
-                 fontsize=24, fontweight='bold', pad=20)
-    ax.set_xlabel('MUC DO QUAN TRONG (IMPORTANCE SCORE)', fontsize=16, fontweight='bold')
+    # Title - font 36
+    ax.set_title('TOP 8 FEATURE IMPORTANCE\np_freelancer_accept Model', 
+                 fontsize=36, fontweight='bold', pad=30)
     
-    # Tính max importance để đặt text position hợp lý
+    # X label - font 28
+    ax.set_xlabel('MUC DO QUAN TRONG (IMPORTANCE SCORE)', fontsize=28, fontweight='bold', labelpad=15)
+    ax.tick_params(axis='x', labelsize=22)
+    
     max_importance = top_features['importance'].max()
     
-    # Chỉ hiển thị giá trị số, không hiển thị "Tăng/Giảm" để tránh đè
+    # Giá trị trên bar - font 26
     for i, (bar, val) in enumerate(zip(bars, top_features['importance'])):
         ax.text(val + max_importance * 0.02, i, f'{val:.3f}', 
-                va='center', fontsize=13, fontweight='bold')
+                va='center', fontsize=26, fontweight='bold')
     
-    # Legend thay vì text "Tăng/Giảm" trên mỗi bar
+    # Legend - font 24
     from matplotlib.patches import Patch
     legend_elements = [
         Patch(facecolor='#4ECDC4', alpha=0.85, label='Tang kha nang Accept'),
         Patch(facecolor='#FF6B6B', alpha=0.85, label='Giam kha nang Accept')
     ]
-    ax.legend(handles=legend_elements, loc='lower right', fontsize=14)
+    ax.legend(handles=legend_elements, loc='lower right', fontsize=24)
     
     ax.grid(True, alpha=0.3, axis='x')
+    ax.set_xlim(0, max_importance * 1.3)
     
-    # Mở rộng xlim để có không gian cho text
-    ax.set_xlim(0, max_importance * 1.2)
+    # Thêm padding
+    plt.subplots_adjust(left=0.35, right=0.95, top=0.92, bottom=0.1)
     
-    plt.tight_layout()
     output_file = OUTPUT_DIR / "03_feature_importance.png"
     plt.savefig(output_file, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
@@ -222,18 +221,27 @@ def create_feature_importance_chart(model, feature_cols):
 
 
 def create_dataset_overview_chart(dataset_info, feature_cols):
-    """Chart 4: Dataset Overview - Chia thành 4 phần rõ ràng"""
+    """Chart 4: Dataset Overview - Font CỰC LỚN cho in A4"""
     
-    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
-    ax1, ax2, ax3, ax4 = axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]
+    # Figsize lớn hơn và dùng GridSpec để kiểm soát khoảng cách
+    fig = plt.figure(figsize=(22, 18))
     
-    fig.suptitle('DATASET OVERVIEW - p_freelancer_accept Model', 
-                 fontsize=22, fontweight='bold', y=1.02)
+    # GridSpec với khoảng cách lớn giữa các subplot
+    gs = fig.add_gridspec(2, 2, hspace=0.35, wspace=0.3)
+    
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[0, 1])
+    ax3 = fig.add_subplot(gs[1, 0])
+    ax4 = fig.add_subplot(gs[1, 1])
+    
+    # Title - font 34
+    fig.suptitle('DATASET OVERVIEW\np_freelancer_accept Model', 
+                 fontsize=34, fontweight='bold', y=0.98)
     
     # ===== 1. Label Distribution (Pie Chart) =====
     sizes = [dataset_info['negative'], dataset_info['positive']]
     colors = ['#FF6B6B', '#4ECDC4']
-    explode = (0.02, 0.02)
+    explode = (0.03, 0.03)
     
     wedges, texts, autotexts = ax1.pie(
         sizes, 
@@ -241,20 +249,20 @@ def create_dataset_overview_chart(dataset_info, feature_cols):
         autopct='%1.1f%%', 
         colors=colors, 
         startangle=90,
-        textprops={'fontsize': 14}
+        textprops={'fontsize': 24}
     )
     
     for autotext in autotexts:
-        autotext.set_fontsize(16)
+        autotext.set_fontsize(28)
         autotext.set_fontweight('bold')
     
     ax1.legend(
         [f'DECLINED: {dataset_info["negative"]:,}', 
          f'ACCEPTED: {dataset_info["positive"]:,}'],
         loc='upper left',
-        fontsize=12
+        fontsize=20
     )
-    ax1.set_title('Phan Bo Nhan', fontsize=16, fontweight='bold')
+    ax1.set_title('PHAN BO NHAN', fontsize=28, fontweight='bold', pad=15)
     
     # ===== 2. Sample Counts (Bar Chart) =====
     categories = ['Train', 'Test', 'Total']
@@ -262,20 +270,20 @@ def create_dataset_overview_chart(dataset_info, feature_cols):
     colors_bar = ['#45B7D1', '#96CEB4', '#FFA726']
     
     bars = ax2.bar(categories, counts, color=colors_bar, alpha=0.85, width=0.5)
-    ax2.set_title('So Luong Samples', fontsize=16, fontweight='bold')
-    ax2.set_ylabel('So Luong', fontsize=12)
-    ax2.set_ylim(0, max(counts) * 1.25)
+    ax2.set_title('SO LUONG SAMPLES', fontsize=28, fontweight='bold', pad=15)
+    ax2.set_ylabel('So Luong', fontsize=22, fontweight='bold')
+    ax2.set_ylim(0, max(counts) * 1.3)
+    ax2.tick_params(axis='both', labelsize=20)
     
     for bar, count in zip(bars, counts):
         ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(counts)*0.03, 
                 f'{count:,}', ha='center', va='bottom', 
-                fontsize=14, fontweight='bold')
+                fontsize=26, fontweight='bold')
     
-    # ===== 3. Model Info - Dùng table thay vì text =====
+    # ===== 3. Model Info - Table =====
     ax3.axis('off')
-    ax3.set_title('Thong Tin Mo Hinh', fontsize=16, fontweight='bold')
+    ax3.set_title('THONG TIN MO HINH', fontsize=28, fontweight='bold', pad=15)
     
-    # Tạo table data
     table_data = [
         ['Algorithm', 'Logistic Regression'],
         ['Features', f'{len(feature_cols)} dac trung'],
@@ -289,42 +297,40 @@ def create_dataset_overview_chart(dataset_info, feature_cols):
     
     table = ax3.table(
         cellText=table_data,
-        colLabels=['Thong so', 'Gia tri'],
+        colLabels=['THONG SO', 'GIA TRI'],
         loc='center',
         cellLoc='left',
-        colWidths=[0.4, 0.4]
+        colWidths=[0.5, 0.5]
     )
     table.auto_set_font_size(False)
-    table.set_fontsize(12)
-    table.scale(1.2, 1.8)
+    table.set_fontsize(20)
+    table.scale(1.4, 2.8)
     
-    # Style header
     for i in range(2):
         table[(0, i)].set_facecolor('#4ECDC4')
-        table[(0, i)].set_text_props(fontweight='bold', color='white')
+        table[(0, i)].set_text_props(fontweight='bold', color='white', fontsize=22)
     
     # ===== 4. Feature Categories (Bar Chart) =====
-    feature_categories = {'Core': 4, 'Job': 6, 'Freelancer': 5, 'Pairwise': 5}
+    feature_categories = {'Core': 4, 'Job': 6, 'FL': 5, 'Pair': 5}
     
     colors_feat = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
     bars_feat = ax4.bar(feature_categories.keys(), feature_categories.values(), 
                         color=colors_feat, alpha=0.85, width=0.5)
-    ax4.set_title('Phan Loai Features', fontsize=16, fontweight='bold')
-    ax4.set_ylabel('So Luong', fontsize=12)
-    ax4.set_ylim(0, 9)
+    ax4.set_title('PHAN LOAI FEATURES', fontsize=28, fontweight='bold', pad=15)
+    ax4.set_ylabel('So Luong', fontsize=22, fontweight='bold')
+    ax4.set_ylim(0, 10)
+    ax4.tick_params(axis='both', labelsize=20)
     
     for bar, count in zip(bars_feat, feature_categories.values()):
         ax4.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.3, 
                 f'{count}', ha='center', va='bottom', 
-                fontsize=14, fontweight='bold')
+                fontsize=26, fontweight='bold')
     
-    # Total annotation
-    ax4.text(0.5, 0.92, f'Tong: {len(feature_cols)} features', 
+    ax4.text(0.5, 0.88, f'Tong: {len(feature_cols)} features', 
              transform=ax4.transAxes, ha='center',
-             fontsize=12, fontweight='bold',
-             bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", alpha=0.9))
+             fontsize=22, fontweight='bold',
+             bbox=dict(boxstyle="round,pad=0.4", facecolor="lightyellow", alpha=0.9))
     
-    plt.tight_layout()
     output_file = OUTPUT_DIR / "04_dataset_overview.png"
     plt.savefig(output_file, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
