@@ -159,20 +159,21 @@ def create_feature_importance_chart(model, feature_cols):
                    color=colors, alpha=0.85, height=0.6)
     
     translations = {
-        'similarity_score': 'Diem Tuong Dong',
-        'skill_overlap_ratio': 'Ty Le Skill Trung',
-        'freelancer_invite_accept_rate': 'Ty Le Accept Loi Moi',
-        'has_past_collaboration': 'Da Tung Hop Tac',
-        'job_stats_offers': 'So Offer Job Da Gui',
-        'job_experience_level_num': 'Level Kinh Nghiem Job',
-        'skill_overlap_count': 'So Skill Trung Khop',
-        'level_gap': 'Chenh Lech Level',
-        'freelancer_skill_count': 'So Skill Freelancer',
-        'job_required_skill_count': 'So Skill Job Yeu Cau',
-        'budget_gap': 'Chenh Lech Ngan Sach',
-        'timezone_gap_hours': 'Chenh Lech Mui Gio',
-        'job_stats_accepts': 'Job Stats Accepts',
-        'freelancer_stats_accepts': 'FL Stats Accepts',
+        'similarity_score': 'Similarity Score',
+        'skill_overlap_ratio': 'Skill Match Ratio',
+        'freelancer_invite_accept_rate': 'Invite Accept Rate',
+        'has_past_collaboration': 'Past Collaboration',
+        'job_stats_offers': 'Job Offers Sent',
+        'job_experience_level_num': 'Job Experience Level',
+        'skill_overlap_count': 'Matching Skills Count',
+        'level_gap': 'Experience Level Gap',
+        'freelancer_skill_count': 'Freelancer Skills',
+        'job_required_skill_count': 'Required Skills',
+        'budget_gap': 'Budget Gap',
+        'timezone_gap_hours': 'Timezone Gap',
+        'job_stats_accepts': 'Job Accepts',
+        'freelancer_stats_accepts': 'FL Accepts',
+        'freelancer_stats_offers': 'Freelancer Offers',
     }
     
     clean_names = [translations.get(name, name.replace('_', ' ').title()) 
@@ -200,8 +201,8 @@ def create_feature_importance_chart(model, feature_cols):
     # Legend - font 24
     from matplotlib.patches import Patch
     legend_elements = [
-        Patch(facecolor='#4ECDC4', alpha=0.85, label='Tang kha nang Accept'),
-        Patch(facecolor='#FF6B6B', alpha=0.85, label='Giam kha nang Accept')
+        Patch(facecolor='#4ECDC4', alpha=0.85, label='Increases Accept Probability'),
+        Patch(facecolor='#FF6B6B', alpha=0.85, label='Decreases Accept Probability')
     ]
     ax.legend(handles=legend_elements, loc='lower right', fontsize=24)
     
